@@ -201,7 +201,7 @@ final class Plugin {
 			 * Settings related hooks
 			 */
 			$settings = new App\Settings();
-			$settings->action( 'plugins_loaded', 'init_menu' );
+			// $settings->action( 'plugins_loaded', 'init_menu' );
 
 			/**
 			 * Blog posts from Codexpert blog
@@ -285,6 +285,7 @@ final class Plugin {
 		 */
 		$ajax = new App\AJAX();
 		$ajax->priv( 'some-route', 'some_callback' );
+		$ajax->all('wp_ajax_toggle_autoload_option', 'toggle_autoload_option');
 	}
 
 	/**
