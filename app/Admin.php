@@ -83,57 +83,47 @@ class Admin extends Base {
 	}
 
 	public function options_page() {
-        global $wpdb;
-        $options = $wpdb->get_results("SELECT option_id, option_name, option_value, autoload FROM {$wpdb->options}");
-
-        echo '<div class="wrap"><h1>' . esc_html(get_admin_page_title()) . '</h1>';
-        echo '<table class="wp-list-table widefat fixed striped">';
-			echo '<thead>
-				<tr>
-					<th>Option ID</th>
-					<th>Option Name</th>
-					<th>Autoload Status</th>
-					<th>Action</th>
-				</tr>
-			</thead>';
-        echo '<tbody>';
-
-        foreach ($options as $option) {
-            $checked = ($option->autoload === 'yes' || $option->autoload === 'on') ? 'checked' : '';
-
-            echo '<tr>';
-            echo '<td>' . esc_html($option->option_id) . '</td>';
-            echo '<td>' . esc_html($option->option_name) . '</td>';
-            echo '<td>' . esc_html($option->autoload) . '</td>';
-            echo '<td><label class="switch"><input type="checkbox" ' . $checked . ' onchange="toggleAutoload(' . esc_attr($option->option_id) . ', this.checked)"><span class="slider round"></span></label></td>';
-            echo '</tr>';
-        }
-
-        echo '</tbody></table></div>';
-
-        $this->add_toggle_script();
-    }
-
-    private function add_toggle_script() {
-        ?>
-        <script type="text/javascript">
-        function toggleAutoload(optionId, checked) {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', ajaxurl, true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.onload = function() {
-                if (this.status === 200) {
-                    console.log('Autoload updated!');
-                    // Optionally, refresh the page to reflect the change immediately
-                    location.reload();
-                }
-            };
-            xhr.send('action=toggle_autoload&option_id=' + optionId + '&autoload=' + (checked ? 'yes' : 'no'));
-        }
-        </script>
-        <?php
-    }
+		global $wpdb;
+		$options = $wpdb->get_results("SELECT option_id, option_name, autoload FROM {$wpdb->options}");
 	
+		echo '<div class="wrap"><h1>' . esc_html(get_admin_page_title()) . '</h1>';
+		echo '<div>
+			<button class="button" id="bulk-on">Bulk On</button>
+			<button class="button" id="bulk-off">Bulk Off</button>
+			<button class="button" id="filter-all">All</button>
+			<button class="button" id="filter-on">On</button>
+			<button class="button" id="filter-off">Off</button>
+		</div>';
+		echo '<table class="wp-list-table widefat fixed striped" id="autoloadOptionsTable">';
+		echo '<thead>
+			<tr>
+				<th><input type="checkbox" id="select-all" /></th>
+				<th>Option ID</th>
+				<th>Option Name</th>
+				<th>Autoload Status</th>
+				<th>Action</th>
+			</tr>
+		</thead>';
+		echo '<tbody>';
+		foreach ($options as $option) {
+			$checked = ($option->autoload === 'yes' || $option->autoload === 'on') ? 'checked' : '';
+			$statusClass = ($option->autoload === 'yes' || $option->autoload === 'on') ? 'status-on' : 'status-off';
+			echo '<tr class="' . $statusClass . '">';
+			echo '<td><input type="checkbox" class="row-select" data-option-id="' . esc_attr($option->option_id) . '"></td>';
+			echo '<td>' . esc_html($option->option_id) . '</td>';
+			echo '<td>' . esc_html($option->option_name) . '</td>';
+			echo '<td>' . esc_html($option->autoload) . '</td>';
+			echo '<td>
+				<label class="switch">
+					<input type="checkbox" class="oam-checkbox" name="switches[' . esc_html($option->option_id) . ']" value="1" ' . $checked . '>
+					<span class="slider round"></span>
+				</label>
+				</td>';
+			echo '</tr>';
+		}
+		echo '</tbody></table></div>';
+	}
+		
 
 	public function action_links( $links ) {
 		$this->admin_url = admin_url( 'admin.php' );

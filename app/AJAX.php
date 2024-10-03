@@ -48,38 +48,38 @@ class AJAX extends Base {
 	}
 
 	public function toggle_autoload_option() {
-	    // check_ajax_referer('autoload_option_nonce', 'nonce');
-
-	    if (!current_user_can('manage_options')) {
-	        wp_send_json_error('Permission denied');
-	    }
-
-	    $option_name = isset($_POST['option_name']) ? sanitize_text_field($_POST['option_name']) : '';
-	    $autoload_value = isset($_POST['autoload']) ? sanitize_text_field($_POST['autoload']) : '';
-
-	    if (empty($option_name) || ($autoload_value !== 'yes' && $autoload_value !== 'no')) {
-	        wp_send_json_error('Invalid data');
-	    }
-
-	    global $wpdb;
-	    $updated = $wpdb->update(
-	        $wpdb->options,
-	        ['autoload' => $autoload_value],
-	        ['option_name' => $option_name]
-	    );
-
-	    if ($updated !== false) {
-	        // Clear the old transient
-	        delete_transient('autoload_options_list');
-	        
-	        // Query new data and update the transient with new values
-	        $options_data = $wpdb->get_results("SELECT option_name, autoload FROM {$wpdb->options}");
-	        set_transient('autoload_options_list', $options_data, 12 * HOUR_IN_SECONDS);
-
-	        wp_send_json_success('Autoload value updated');
-	    } else {
-	        wp_send_json_error('Failed to update');
-	    }
+		if (!wp_verify_nonce($_REQUEST['nonce']) || !current_user_can('manage_options')) {
+			wp_die('No permission');
+		}
+		$option_id = intval($_REQUEST['option_id']);
+		$autoload = sanitize_text_field($_REQUEST['autoload']);
+		global $wpdb;
+		$wpdb->update(
+			$wpdb->options,
+			['autoload' => $autoload],
+			['option_id' => $option_id]
+		);
+		set_transient('autoload_option_' . $option_id, $autoload, 12 * HOUR_IN_SECONDS);
+		wp_send_json_success('Autoload updated successfully');
 	}
 
+	public function toggle_bulk_autoload_option() {
+		if (!wp_verify_nonce($_REQUEST['nonce']) || !current_user_can('manage_options')) {
+			wp_die('No permission');
+		}
+		$option_ids = $_POST['option_ids'];
+		$bulk_status = sanitize_text_field($_POST['autoload']);
+		global $wpdb;
+
+		foreach ($option_ids as $option_id) {
+			$wpdb->update(
+				$wpdb->options,
+				['autoload' => $bulk_status],
+				['option_id' => intval($option_id)]
+			);
+		}
+		set_transient('autoload_bulk_option_' . $option_id, $bulk_status, 12 * HOUR_IN_SECONDS);
+
+		wp_send_json_success('Autoload updated successfully');
+	}
 }
