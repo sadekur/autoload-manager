@@ -186,16 +186,7 @@ final class Plugin {
 			$admin->action( 'admin_menu', 'admin_menu' );
 			$admin->action( 'admin_enqueue_scripts', 'enqueue_scripts' );
 			$admin->filter( "plugin_action_links_{$this->plugin['basename']}", 'action_links' );
-			$admin->filter( 'plugin_row_meta', 'plugin_row_meta', 10, 2 );
-			$admin->action( 'save_post', 'update_cache', 10, 3 );
-			$admin->action( 'admin_footer_text', 'footer_text' );
 
-			/**
-			 * The setup wizard
-			 */
-			$wizard = new App\Wizard();
-			$wizard->action( 'plugins_loaded', 'render' );
-			$wizard->filter( "plugin_action_links_{$this->plugin['basename']}", 'action_links' );
 
 			/**
 			 * Settings related hooks
@@ -203,14 +194,6 @@ final class Plugin {
 			$settings = new App\Settings();
 			// $settings->action( 'plugins_loaded', 'init_menu' );
 
-			/**
-			 * Blog posts from Codexpert blog
-			 * 
-			 * @package Codexpert\Plugin
-			 * 
-			 * @author Codexpert <hi@codexpert.io>
-			 */
-			$widget = new Widget();
 
 			/**
 			 * Renders different notices
@@ -259,18 +242,6 @@ final class Plugin {
 			$front->action( 'wp_enqueue_scripts', 'enqueue_scripts' );
 			$front->action( 'admin_bar_menu', 'add_admin_bar', 70 );
 
-			/**
-			 * Shortcode related hooks
-			 */
-			$shortcode = new App\Shortcode();
-			$shortcode->register( 'my-shortcode', 'my_shortcode' );
-
-			/**
-			 * Custom REST API related hooks
-			 */
-			$api = new App\API();
-			$api->action( 'rest_api_init', 'register_endpoints' );
-
 		endif;
 
 		/**
@@ -285,7 +256,7 @@ final class Plugin {
 		 */
 		$ajax = new App\AJAX();
 		$ajax->priv( 'some-route', 'some_callback' );
-		$ajax->all('wp_ajax_toggle_autoload_option', 'toggle_autoload_option');
+		$ajax->all('toggle_autoload_option', 'toggle_autoload_option');
 	}
 
 	/**

@@ -47,15 +47,14 @@ class Admin extends Base {
 	 * Enqueue JavaScripts and stylesheets
 	 */
 	public function enqueue_scripts($hook) {
-		 if ($hook !== 'toplevel_page_autoload-options-list') {
-        return;
-    }
+	// 	 if ($hook !== 'toplevel_page_autoload-options-list') {
+    //     return;
+    // }
 		$min = defined( 'AUTOLOADMANAGER_DEBUG' ) && AUTOLOADMANAGER_DEBUG ? '' : '.min';
 		
 		wp_enqueue_style( $this->slug, plugins_url( "/assets/css/admin{$min}.css", AUTOLOADMANAGER_FILE ), '', $this->version, 'all' );
 		wp_enqueue_script( $this->slug, plugins_url( "/assets/js/admin{$min}.js", AUTOLOADMANAGER_FILE ), [ 'jquery' ], $this->version, true );
 
-	    wp_enqueue_script( "{$this->slug}-react", plugins_url( 'spa/admin/build/index.js', AUTOLOADMANAGER_FILE ), [ 'wp-element' ], '1.0.0', true );
 
 	    $localized = [
 	    	'homeurl'		=> get_bloginfo( 'url' ),
@@ -84,66 +83,57 @@ class Admin extends Base {
 	}
 
 	public function options_page() {
-    global $wpdb;
+        global $wpdb;
+        $options = $wpdb->get_results("SELECT option_id, option_name, option_value, autoload FROM {$wpdb->options}");
 
-    // Check if the transient exists
-    $options_data = get_transient('autoload_options_list');
+        echo '<div class="wrap"><h1>' . esc_html(get_admin_page_title()) . '</h1>';
+        echo '<table class="wp-list-table widefat fixed striped">';
+			echo '<thead>
+				<tr>
+					<th>Option ID</th>
+					<th>Option Name</th>
+					<th>Autoload Status</th>
+					<th>Action</th>
+				</tr>
+			</thead>';
+        echo '<tbody>';
 
-    if ($options_data === false) {
-        // Transient doesn't exist, query the database
-        $options_data = $wpdb->get_results("SELECT option_name, autoload FROM {$wpdb->options}");
+        foreach ($options as $option) {
+            $checked = ($option->autoload === 'yes' || $option->autoload === 'on') ? 'checked' : '';
 
-        // Store the results in a transient for 12 hours
-        set_transient('autoload_options_list', $options_data, 12 * HOUR_IN_SECONDS);
-    }
-
-    echo '<div class="wrap">';
-    echo '<h1>Autoload Options List</h1>';
-    echo '<table class="widefat fixed" cellspacing="0">';
-    echo '<thead>';
-    echo '<tr>';
-    echo '<th>Option Name</th>';
-    echo '<th>Autoload</th>';
-    echo '<th>Action</th>';
-    echo '</tr>';
-    echo '</thead>';
-    echo '<tbody>';
-
-    if (!empty($options_data)) {
-        foreach ($options_data as $row) {
-            $checked = $row->autoload === 'yes' ? 'checked' : '';
             echo '<tr>';
-            echo '<td>' . esc_html($row->option_name) . '</td>';
-            echo '<td>';
-            echo '<label class="switch">';
-            echo '<input type="checkbox" class="autoload-toggle" data-option="' . esc_attr($row->option_name) . '" ' . $checked . '>';
-            echo '<span class="slider round"></span>';
-            echo '</label>';
-            echo '</td>';
-            echo '<td>';
-            echo '<button class="button autoload-submit" data-option="' . esc_attr($row->option_name) . '">Submit</button>';
-            echo '</td>';
+            echo '<td>' . esc_html($option->option_id) . '</td>';
+            echo '<td>' . esc_html($option->option_name) . '</td>';
+            echo '<td>' . esc_html($option->autoload) . '</td>';
+            echo '<td><label class="switch"><input type="checkbox" ' . $checked . ' onchange="toggleAutoload(' . esc_attr($option->option_id) . ', this.checked)"><span class="slider round"></span></label></td>';
             echo '</tr>';
         }
-    } else {
-        echo '<tr><td colspan="3">No options found.</td></tr>';
+
+        echo '</tbody></table></div>';
+
+        $this->add_toggle_script();
     }
 
-    echo '</tbody>';
-    echo '</table>';
-    echo '</div>';
-}
-
-
-
-    // Truncate option value if it's too long
-    private function truncate_option_value($value) {
-        $length = 100; // Set a limit on the length
-        if (strlen($value) > $length) {
-            return substr($value, 0, $length) . '...';
+    private function add_toggle_script() {
+        ?>
+        <script type="text/javascript">
+        function toggleAutoload(optionId, checked) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', ajaxurl, true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (this.status === 200) {
+                    console.log('Autoload updated!');
+                    // Optionally, refresh the page to reflect the change immediately
+                    location.reload();
+                }
+            };
+            xhr.send('action=toggle_autoload&option_id=' + optionId + '&autoload=' + (checked ? 'yes' : 'no'));
         }
-        return $value;
+        </script>
+        <?php
     }
+	
 
 	public function action_links( $links ) {
 		$this->admin_url = admin_url( 'admin.php' );
@@ -154,26 +144,6 @@ class Admin extends Base {
 		
 		return array_merge( $new_links, $links );
 	}
-
-	public function plugin_row_meta( $plugin_meta, $plugin_file ) {
-		
-		if ( $this->plugin['basename'] === $plugin_file ) {
-			$plugin_meta['help'] = '<a href="https://help.codexpert.io/" target="_blank" class="cx-help">' . __( 'Help', 'autoload-manager' ) . '</a>';
-		}
-
-		return $plugin_meta;
-	}
-
-	public function update_cache( $post_id, $post, $update ) {
-		wp_cache_delete( "alm_{$post->post_type}", 'alm' );
-	}
-
-	public function footer_text( $text ) {
-		if( get_current_screen()->parent_base != $this->slug ) return $text;
-
-		return sprintf( __( 'If you like <strong>%1$s</strong>, please <a href="%2$s" target="_blank">leave us a %3$s rating</a> on WordPress.org! It\'d motivate and inspire us to make the plugin even better!', 'autoload-manager' ), $this->name, "https://wordpress.org/support/plugin/{$this->slug}/reviews/?filter=5#new-post", '⭐⭐⭐⭐⭐' );
-	}
-
 	public function modal() {
 		echo '
 		<div id="autoload-manager-modal" style="display: none">

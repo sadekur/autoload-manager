@@ -48,7 +48,7 @@ class AJAX extends Base {
 	}
 
 	public function toggle_autoload_option() {
-	    check_ajax_referer('autoload_option_nonce', 'nonce');
+	    // check_ajax_referer('autoload_option_nonce', 'nonce');
 
 	    if (!current_user_can('manage_options')) {
 	        wp_send_json_error('Permission denied');
