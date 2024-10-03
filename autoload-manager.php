@@ -258,6 +258,8 @@ final class Plugin {
 		$ajax->priv( 'some-route', 'some_callback' );
 		$ajax->all('update_autoload_option', 'toggle_autoload_option');
 		$ajax->all('update_bulk_autoload_option', 'toggle_bulk_autoload_option');
+		$ajax->all('load_options_data', 'load_options_data');
+
 	}
 
 	/**

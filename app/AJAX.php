@@ -82,4 +82,44 @@ class AJAX extends Base {
 
 		wp_send_json_success('Autoload updated successfully');
 	}
+
+
+	public function load_options_data() {
+		global $wpdb;
+		$page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+		$items_per_page = 50; // Number of items per page
+		$offset = ($page - 1) * $items_per_page;
+	
+		$options = $wpdb->get_results($wpdb->prepare("SELECT option_id, option_name, autoload FROM {$wpdb->options} LIMIT %d, %d", $offset, $items_per_page));
+		$total_items = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->options}");
+		$total_pages = ceil($total_items / $items_per_page);
+	
+		ob_start();
+		foreach ($options as $option) {
+			$checked = ($option->autoload === 'yes' || $option->autoload === 'on') ? 'checked' : '';
+			$statusClass = ($option->autoload === 'yes' || $option->autoload === 'on') ? 'status-on' : 'status-off';
+			echo '<tr class="' . $statusClass . '">';
+			echo '<td><input type="checkbox" class="row-select" data-option-id="' . esc_attr($option->option_id) . '"></td>';
+			echo '<td>' . esc_html($option->option_id) . '</td>';
+			echo '<td>' . esc_html($option->option_name) . '</td>';
+			echo '<td>' . esc_html($option->autoload) . '</td>';
+			echo '<td>
+				<label class="switch">
+					<input type="checkbox" class="autoload-manager-checkbox" data-option-id="' . esc_attr($option->option_id) . '" name="switches[' . esc_html($option->option_id) . ']" value="1" ' . $checked . '>
+					<span class="slider round"></span>
+				</label>
+				</td>';
+			echo '</tr>';
+		}
+		$table_content = ob_get_clean();
+	
+		wp_send_json_success([
+			'table_content' => $table_content,
+			'pagination' => [
+				'total_pages' => $total_pages,
+				'current_page' => $page
+			]
+		]);
+	}
+	
 }
