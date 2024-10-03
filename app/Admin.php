@@ -115,7 +115,7 @@ class Admin extends Base {
 			echo '<td>' . esc_html($option->autoload) . '</td>';
 			echo '<td>
 				<label class="switch">
-					<input type="checkbox" class="oam-checkbox" name="switches[' . esc_html($option->option_id) . ']" value="1" ' . $checked . '>
+					<input type="checkbox" class="autoload-manager-checkbox" data-option-id="' . esc_attr($option->option_id) . '" name="switches[' . esc_html($option->option_id) . ']" value="1" ' . $checked . '>
 					<span class="slider round"></span>
 				</label>
 				</td>';

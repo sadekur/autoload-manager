@@ -43,7 +43,8 @@
 
 		// On/Off toggle value Saved
 		$(".autoload-manager-checkbox").on("change", function () {
-			var optionId = $(this).closest("tr").find("td:first").text();
+			var optionId = $(this).data("option-id");
+			console.log(optionId);
 			var newAutoload = $(this).is(":checked") ? "yes" : "no";
 
 			$.post({
