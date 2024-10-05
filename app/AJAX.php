@@ -48,19 +48,25 @@ class AJAX extends Base {
 	}
 
 	public function toggle_autoload_option() {
-		if (!wp_verify_nonce($_REQUEST['nonce']) || !current_user_can('manage_options')) {
-			wp_die('No permission');
+		if ( !isset( $_REQUEST[ 'nonce' ], $_REQUEST[ 'option_id' ], $_REQUEST[ 'autoload' ] ) || !wp_verify_nonce( $_REQUEST[ 'nonce' ] ) || !current_user_can( 'manage_options' ) ) {
+			wp_die( 'No permission' );
 		}
-		$option_id = intval($_REQUEST['option_id']);
-		$autoload = sanitize_text_field($_REQUEST['autoload']);
+		$option_id 	= intval( $_REQUEST[ 'option_id' ] );
+		$autoload 	= sanitize_text_field($_REQUEST[ 'autoload' ]);
 		global $wpdb;
 		$wpdb->update(
 			$wpdb->options,
-			['autoload' => $autoload],
-			['option_id' => $option_id]
+			[ 'autoload' => $autoload ],
+			[ 'option_id' => $option_id ]
 		);
-		set_transient('autoload_option_' . $option_id, $autoload, 12 * HOUR_IN_SECONDS);
-		wp_send_json_success('Autoload updated successfully');
+		$autoload_options = get_transient( 'autoload_options_status' );
+		if ( false === $autoload_options ) {
+			$autoload_options = [];
+		}
+		$autoload_options[ $option_id ] = $autoload;
+		set_transient( 'autoload_options_status', $autoload_options, 12 * HOUR_IN_SECONDS );
+	
+		wp_send_json_success( 'Autoload updated successfully' );
 	}
 
 	public function toggle_bulk_autoload_option() {
