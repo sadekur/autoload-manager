@@ -48,11 +48,11 @@ class AJAX extends Base {
 	}
 
 	public function toggle_autoload_option() {
-		if ( !isset( $_REQUEST[ 'nonce' ], $_REQUEST[ 'option_id' ], $_REQUEST[ 'autoload' ] ) || !wp_verify_nonce( $_REQUEST[ 'nonce' ] ) || !current_user_can( 'manage_options' ) ) {
+		if ( !isset( $_POST[ 'nonce' ], $_POST[ 'option_id' ], $_POST[ 'autoload' ] ) || !wp_verify_nonce( $_POST[ 'nonce' ] ) || !current_user_can( 'manage_options' ) ) {
 			wp_die( 'No permission' );
 		}
-		$option_id 	= intval( $_REQUEST[ 'option_id' ] );
-		$autoload 	= sanitize_text_field($_REQUEST[ 'autoload' ]);
+		$option_id 	= intval( $_POST[ 'option_id' ] );
+		$autoload 	= sanitize_text_field($_POST[ 'autoload' ]);
 		global $wpdb;
 		$wpdb->update(
 			$wpdb->options,
@@ -70,7 +70,7 @@ class AJAX extends Base {
 	}
 
 	public function toggle_bulk_autoload_option() {
-		if (!wp_verify_nonce($_REQUEST['nonce']) || !current_user_can('manage_options')) {
+		if (!wp_verify_nonce($_POST['nonce']) || !current_user_can('manage_options')) {
 			wp_die('No permission');
 		}
 		$option_ids = $_POST['option_ids'];
@@ -88,44 +88,49 @@ class AJAX extends Base {
 
 		wp_send_json_success('Autoload updated successfully');
 	}
-
-
 	public function load_options_data() {
-		global $wpdb;
+		// Check for necessary permissions and nonces
+		// if (!current_user_can('manage_options') || !check_ajax_referer('your_nonce_name', 'nonce', false)) {
+		// 	wp_send_json_error('No permission or invalid nonce', 403);
+		// }
+	
 		$page = isset($_POST['page']) ? intval($_POST['page']) : 1;
-		$items_per_page = 50; // Number of items per page
+		$items_per_page = 50; // Set the number of items per page
 		$offset = ($page - 1) * $items_per_page;
 	
-		$options = $wpdb->get_results($wpdb->prepare("SELECT option_id, option_name, autoload FROM {$wpdb->options} LIMIT %d, %d", $offset, $items_per_page));
+		global $wpdb;
+		$options = $wpdb->get_results($wpdb->prepare(
+			"SELECT option_id, option_name, autoload FROM {$wpdb->options} ORDER BY option_id ASC LIMIT %d, %d", 
+			$offset, 
+			$items_per_page
+		));
+	
 		$total_items = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->options}");
 		$total_pages = ceil($total_items / $items_per_page);
 	
-		ob_start();
+		$data = [
+			'table_content' => $this->generate_table_content($options),
+			'total_pages' => $total_pages,
+			'current_page' => $page
+		];
+	
+		wp_send_json_success($data);
+	}
+	
+	private function generate_table_content($options) {
+		$output = '';
 		foreach ($options as $option) {
 			$checked = ($option->autoload === 'yes' || $option->autoload === 'on') ? 'checked' : '';
 			$statusClass = ($option->autoload === 'yes' || $option->autoload === 'on') ? 'status-on' : 'status-off';
-			echo '<tr class="' . $statusClass . '">';
-			echo '<td><input type="checkbox" class="row-select" data-option-id="' . esc_attr($option->option_id) . '"></td>';
-			echo '<td>' . esc_html($option->option_id) . '</td>';
-			echo '<td>' . esc_html($option->option_name) . '</td>';
-			echo '<td>' . esc_html($option->autoload) . '</td>';
-			echo '<td>
-				<label class="switch">
-					<input type="checkbox" class="autoload-manager-checkbox" data-option-id="' . esc_attr($option->option_id) . '" name="switches[' . esc_html($option->option_id) . ']" value="1" ' . $checked . '>
-					<span class="slider round"></span>
-				</label>
-				</td>';
-			echo '</tr>';
+			$output .= '<tr class="' . $statusClass . '">';
+			$output .= '<td><input type="checkbox" class="row-select" data-option-id="' . esc_attr($option->option_id) . '"></td>';
+			$output .= '<td>' . esc_html($option->option_id) . '</td>';
+			$output .= '<td>' . esc_html($option->option_name) . '</td>';
+			$output .= '<td>' . esc_html($option->autoload) . '</td>';
+			$output .= '<td><label class="switch"><input type="checkbox" class="autoload-manager-checkbox" data-option-id="' . esc_attr($option->option_id) . '" name="switches[' . esc_html($option->option_id) . ']" value="1" ' . $checked . '><span class="slider round"></span></label></td>';
+			$output .= '</tr>';
 		}
-		$table_content = ob_get_clean();
-	
-		wp_send_json_success([
-			'table_content' => $table_content,
-			'pagination' => [
-				'total_pages' => $total_pages,
-				'current_page' => $page
-			]
-		]);
-	}
+		return $output;
+	}	
 	
 }

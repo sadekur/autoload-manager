@@ -68,8 +68,6 @@
 		$("#select-all").click(function () {
 			$(".row-select").prop("checked", $(this).prop("checked"));
 		});
-
-		// Bulk on/off handlers
 		function updateBulkAutoload(newStatus) {
 			var selectedOptions = $(".row-select:checked")
 				.map(function () {
@@ -101,5 +99,140 @@
 		$("#bulk-off").click(function () {
 			updateBulkAutoload("no");
 		});
+
+		// Pagination
+		var currentPage = 1;
+		var itemsPerPage = 50;
+
+		function loadPage(page) {
+			$.ajax({
+				url: AUTOLOADMANAGER.ajaxurl,
+				type: "POST",
+				data: {
+					action: "load_options_data",
+					page: page,
+					items_per_page: itemsPerPage,
+				},
+				success: function (response) {
+					$("#autoloadOptionsTable tbody").html(
+						response.data.table_content
+					);
+					// Update pagination controls
+					currentPage = page;
+					$("#prev-page").prop("disabled", currentPage <= 1);
+					$("#next-page").prop(
+						"disabled",
+						currentPage >= response.data.total_pages
+					);
+				},
+			});
+		}
+
+		// On/Off toggle value Saved
+		$(".autoload-manager-checkbox").on("change", function () {
+			var optionId = $(this).data("option-id");
+			console.log(optionId);
+			var newAutoload = $(this).is(":checked") ? "yes" : "no";
+
+			$.post({
+				url: AUTOLOADMANAGER.ajaxurl,
+				data: {
+					action: "update_autoload_option",
+					option_id: optionId,
+					autoload: newAutoload,
+					nonce: AUTOLOADMANAGER._wpnonce,
+				},
+				success: function (response) {
+					alert("Autoload updated!");
+				},
+				error: function () {
+					alert("Error updating autoload.");
+				},
+			});
+		});
+
+		var currentPage = 1;
+		var itemsPerPage = 50;
+
+		// Initially load the first page
+		$.ajax({
+			url: AUTOLOADMANAGER.ajaxurl,
+			type: "POST",
+			data: {
+				action: "load_options_data",
+				page: currentPage,
+				items_per_page: itemsPerPage,
+			},
+			success: function (response) {
+				$("#autoloadOptionsTable tbody").html(
+					response.data.table_content
+				);
+				$("#prev-page").prop("disabled", currentPage <= 1);
+				$("#next-page").prop(
+					"disabled",
+					currentPage >= response.data.total_pages
+				);
+			},
+		});
+
+		// Pagination buttons
+		$("#prev-page").click(function () {
+			if (currentPage > 1) {
+				currentPage -= 1;
+				refreshTable();
+			}
+		});
+
+		$("#next-page").click(function () {
+			currentPage += 1;
+			refreshTable();
+		});
+
+		function refreshTable() {
+			$.ajax({
+				url: AUTOLOADMANAGER.ajaxurl,
+				type: "POST",
+				data: {
+					action: "load_options_data",
+					page: currentPage,
+					items_per_page: itemsPerPage,
+				},
+				success: function (response) {
+					$("#autoloadOptionsTable tbody").html(
+						response.data.table_content
+					);
+					$("#prev-page").prop("disabled", currentPage <= 1);
+					$("#next-page").prop(
+						"disabled",
+						currentPage >= response.data.total_pages
+					);
+				},
+			});
+		}
+
+		// Event delegation for on/off toggle
+		$("#autoloadOptionsTable").on(
+			"change",
+			".autoload-manager-checkbox",
+			function () {
+				var optionId = $(this).data("option-id");
+				var newAutoload = $(this).is(":checked") ? "yes" : "no";
+				$.post({
+					url: AUTOLOADMANAGER.ajaxurl,
+					data: {
+						action: "update_autoload_option",
+						option_id: optionId,
+						autoload: newAutoload,
+						nonce: AUTOLOADMANAGER._wpnonce,
+					},
+					success: function (response) {
+						alert("Autoload updated!");
+					},
+					error: function () {
+						alert("Error updating autoload.");
+					},
+				});
+			}
+		);
 	});
 })(jQuery);

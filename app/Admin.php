@@ -84,7 +84,8 @@ class Admin extends Base {
 
 	public function options_page() {
 		global $wpdb;
-		$options = $wpdb->get_results("SELECT option_id, option_name, autoload FROM {$wpdb->options}");
+		// Load the initial 50 items directly
+		$options = $wpdb->get_results("SELECT option_id, option_name, autoload FROM {$wpdb->options} LIMIT 50");
 	
 		echo '<div class="wrap"><h1>' . esc_html(get_admin_page_title()) . '</h1>';
 		echo '<div>
@@ -121,9 +122,17 @@ class Admin extends Base {
 				</td>';
 			echo '</tr>';
 		}
-		echo '</tbody></table></div>';
+		echo '</tbody></table>';
+	
+		// Pagination controls
+		echo '<div id="pagination-controls" class="tablenav">
+			<div class="tablenav-pages">
+				<button class="button" id="prev-page">Previous</button>
+				<button class="button" id="next-page">Next</button>
+			</div>
+		</div>';
+		echo '</div>';
 	}
-		
 
 	public function action_links( $links ) {
 		$this->admin_url = admin_url( 'admin.php' );
