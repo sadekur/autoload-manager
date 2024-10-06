@@ -85,7 +85,7 @@
 				},
 				success: function (response) {
 					alert("Bulk autoload update successful!");
-					location.reload();
+					//location.reload();
 				},
 				error: function () {
 					alert("Error updating autoload.");
@@ -217,6 +217,7 @@
 			function () {
 				var optionId = $(this).data("option-id");
 				var newAutoload = $(this).is(":checked") ? "yes" : "no";
+				var $statusTd = $(this).closest("tr").find(".autoload-status");
 				$.post({
 					url: AUTOLOADMANAGER.ajaxurl,
 					data: {
@@ -227,6 +228,7 @@
 					},
 					success: function (response) {
 						alert("Autoload updated!");
+						$statusTd.text(newAutoload);
 					},
 					error: function () {
 						alert("Error updating autoload.");
