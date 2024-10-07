@@ -35,6 +35,10 @@
 					return $(this).data("option-id");
 				})
 				.get();
+				if (selectedOptions.length === 0) {
+					alert("Please select at least one option.");
+					return;
+				}
 
 			$.post({
 				url: AUTOLOADMANAGER.ajaxurl,
@@ -64,18 +68,6 @@
 		// Pagination
 		var currentPage = 1;
 		var itemsPerPage = 50;
-		$("#prev-page").click(function () {
-			if (currentPage > 1) {
-				currentPage -= 1;
-				refreshTable();
-			}
-		});
-
-		$("#next-page").click(function () {
-			currentPage += 1;
-			refreshTable();
-		});
-
 		function refreshTable() {
 			$.ajax({
 				url: AUTOLOADMANAGER.ajaxurl,
@@ -97,6 +89,17 @@
 				},
 			});
 		}
+		$("#prev-page").click(function () {
+			if (currentPage > 1) {
+				currentPage -= 1;
+				refreshTable();
+			}
+		});
+
+		$("#next-page").click(function () {
+			currentPage += 1;
+			refreshTable();
+		});
 
 		// Event delegation for on/off toggle
 		$("#autoloadOptionsTable").on(
