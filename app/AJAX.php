@@ -91,6 +91,7 @@ class AJAX extends Base {
 	public function load_options_data_callback() {
 		// if (!wp_verify_nonce($_POST['nonce'])) {
 		// 	wp_die('No permission');
+		
 		// }
 	
 		$page = isset($_POST['page']) ? intval($_POST['page']) : 1;

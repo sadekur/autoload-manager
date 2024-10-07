@@ -85,7 +85,7 @@
 				},
 				success: function (response) {
 					alert("Bulk autoload update successful!");
-					//location.reload();
+					location.reload();
 				},
 				error: function () {
 					alert("Error updating autoload.");
@@ -151,9 +151,31 @@
 			});
 		});
 
-		// Pagination buttons
 		var currentPage = 1;
 		var itemsPerPage = 50;
+
+		// Initially load the first page
+		$.ajax({
+			url: AUTOLOADMANAGER.ajaxurl,
+			type: "POST",
+			data: {
+				action: "load_options_data",
+				page: currentPage,
+				items_per_page: itemsPerPage,
+			},
+			success: function (response) {
+				$("#autoloadOptionsTable tbody").html(
+					response.data.table_content
+				);
+				$("#prev-page").prop("disabled", currentPage <= 1);
+				$("#next-page").prop(
+					"disabled",
+					currentPage >= response.data.total_pages
+				);
+			},
+		});
+
+		// Pagination buttons
 		$("#prev-page").click(function () {
 			if (currentPage > 1) {
 				currentPage -= 1;
@@ -195,7 +217,6 @@
 			function () {
 				var optionId = $(this).data("option-id");
 				var newAutoload = $(this).is(":checked") ? "yes" : "no";
-				var $statusTd = $(this).closest("tr").find(".autoload-status");
 				$.post({
 					url: AUTOLOADMANAGER.ajaxurl,
 					data: {
@@ -206,7 +227,6 @@
 					},
 					success: function (response) {
 						alert("Autoload updated!");
-						$statusTd.text(newAutoload);
 					},
 					error: function () {
 						alert("Error updating autoload.");
