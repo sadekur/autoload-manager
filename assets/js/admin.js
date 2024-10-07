@@ -1,5 +1,33 @@
 (function ($) {
 	$(document).ready(function () {
+		// Event delegation for on/off toggle
+		$("#autoloadOptionsTable").on(
+			"change",
+			".autoload-manager-checkbox",
+			function () {
+				var optionId = $(this).data("option-id");
+				var newAutoload = $(this).is(":checked") ? "yes" : "no";
+				var $statusTd = $(this).closest("tr").find(".autoload-status");
+				$statusTd.text(newAutoload);
+				$.post({
+					url: AUTOLOADMANAGER.ajaxurl,
+					data: {
+						action: "update_autoload_option",
+						option_id: optionId,
+						autoload: newAutoload,
+						nonce: AUTOLOADMANAGER._wpnonce,
+					},
+					success: function (response) {
+						console.log(response);
+					},
+					error: function () {
+						alert("Error updating autoload.");
+					},
+				});
+			}
+		);
+
+		// Filter options
 		function filterOptions(status) {
 			var rows = $("#autoloadOptionsTable tbody tr");
 			switch (status) {
@@ -39,7 +67,6 @@
 					alert("Please select at least one option.");
 					return;
 				}
-
 			$.post({
 				url: AUTOLOADMANAGER.ajaxurl,
 				data: {
@@ -49,10 +76,12 @@
 					nonce: AUTOLOADMANAGER._wpnonce,
 				},
 				success: function (response) {
+					console.log(response);
 					alert("Bulk autoload update successful!");
 					location.reload();
 				},
-				error: function () {
+				error: function (error) {
+					console.log(error);
 					alert("Error updating autoload.");
 				},
 			});
@@ -100,33 +129,5 @@
 			currentPage += 1;
 			refreshTable();
 		});
-
-		// Event delegation for on/off toggle
-		$("#autoloadOptionsTable").on(
-			"change",
-			".autoload-manager-checkbox",
-			function () {
-				var optionId = $(this).data("option-id");
-				var newAutoload = $(this).is(":checked") ? "yes" : "no";
-				var $statusTd = $(this).closest("tr").find(".autoload-status");
-				$.post({
-					url: AUTOLOADMANAGER.ajaxurl,
-					data: {
-						action: "update_autoload_option",
-						option_id: optionId,
-						autoload: newAutoload,
-						nonce: AUTOLOADMANAGER._wpnonce,
-					},
-					success: function (response) {
-						console.log(response);
-						alert("Autoload updated!");
-						$statusTd.text(newAutoload);
-					},
-					error: function () {
-						alert("Error updating autoload.");
-					},
-				});
-			}
-		);
 	});
 })(jQuery);

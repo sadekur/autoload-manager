@@ -91,7 +91,7 @@ class AJAX extends Base {
 	public function load_options_data_callback() {
 		// if (!wp_verify_nonce($_POST['nonce'])) {
 		// 	wp_die('No permission');
-		
+
 		// }
 	
 		$page = isset($_POST['page']) ? intval($_POST['page']) : 1;
@@ -126,7 +126,7 @@ class AJAX extends Base {
 			$output .= '<td><input type="checkbox" class="row-select" data-option-id="' . esc_attr($option->option_id) . '"></td>';
 			$output .= '<td>' . esc_html($option->option_id) . '</td>';
 			$output .= '<td>' . esc_html($option->option_name) . '</td>';
-			$output .= '<td>' . esc_html($option->autoload) . '</td>';
+			$output .= '<td class="autoload-status">' . esc_html($option->autoload) . '</td>';
 			$output .= '<td><label class="switch"><input type="checkbox" class="autoload-manager-checkbox" data-option-id="' . esc_attr($option->option_id) . '" name="switches[' . esc_html($option->option_id) . ']" value="1" ' . $checked . '><span class="slider round"></span></label></td>';
 			$output .= '</tr>';
 		}
