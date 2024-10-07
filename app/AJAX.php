@@ -88,14 +88,13 @@ class AJAX extends Base {
 
 		wp_send_json_success('Autoload updated successfully');
 	}
-	public function load_options_data() {
-		// Check for necessary permissions and nonces
-		// if (!current_user_can('manage_options') || !check_ajax_referer('your_nonce_name', 'nonce', false)) {
-		// 	wp_send_json_error('No permission or invalid nonce', 403);
+	public function load_options_data_callback() {
+		// if (!wp_verify_nonce($_POST['nonce'])) {
+		// 	wp_die('No permission');
 		// }
 	
 		$page = isset($_POST['page']) ? intval($_POST['page']) : 1;
-		$items_per_page = 50; // Set the number of items per page
+		$items_per_page = 50;
 		$offset = ($page - 1) * $items_per_page;
 	
 		global $wpdb;
@@ -131,6 +130,5 @@ class AJAX extends Base {
 			$output .= '</tr>';
 		}
 		return $output;
-	}	
-	
+	}
 }

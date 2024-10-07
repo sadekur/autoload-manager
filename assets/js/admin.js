@@ -196,6 +196,7 @@
 					action: "load_options_data",
 					page: currentPage,
 					items_per_page: itemsPerPage,
+					// nonce: AUTOLOADMANAGER._wpnonce,
 				},
 				success: function (response) {
 					$("#autoloadOptionsTable tbody").html(
